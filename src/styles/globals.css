@@ -1,0 +1,108 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-gradient-dark text-so-gray-100 font-sans antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading font-bold;
+  }
+
+  h1 {
+    @apply text-5xl md:text-7xl;
+  }
+
+  h2 {
+    @apply text-4xl md:text-5xl;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl;
+  }
+
+  h4 {
+    @apply text-xl md:text-2xl;
+  }
+
+  a {
+    @apply transition-colors duration-250;
+  }
+
+  button {
+    @apply transition-all duration-250;
+  }
+}
+
+@layer components {
+  .container-primary {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .btn-primary {
+    @apply px-6 py-3 bg-gradient-fire text-white font-semibold rounded-lg hover:shadow-glow-red-lg transition-all duration-300 hover:scale-105;
+  }
+
+  .btn-secondary {
+    @apply px-6 py-3 border-2 border-so-primary text-so-primary hover:bg-so-primary hover:text-white transition-all duration-300;
+  }
+
+  .btn-ghost {
+    @apply px-6 py-3 text-so-gold hover:text-so-gold-light transition-colors duration-300;
+  }
+
+  .card-glassmorphism {
+    @apply backdrop-blur-md bg-white/10 border border-white/20 rounded-lg p-6;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-fire bg-clip-text text-transparent;
+  }
+
+  .glow-text {
+    @apply text-so-gold-light drop-shadow-lg;
+  }
+
+  .section-title {
+    @apply text-4xl md:text-5xl font-bold text-center mb-12;
+  }
+}
+
+/* Particle Canvas Background */
+.particle-canvas {
+  @apply w-full h-full absolute top-0 left-0 z-0;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  @apply w-2 h-2;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-so-darker;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-so-primary hover:bg-so-primary-light rounded-full transition-colors duration-300;
+}
+
+/* Selection */
+::selection {
+  @apply bg-so-primary text-white;
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}

@@ -1,0 +1,444 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============= ENUMS =============
+
+enum UserRole {
+  SUPER_ADMIN
+  CLAN_LEADER
+  CO_LEADER
+  STAFF_ADMIN
+  MODERATOR
+  COMPETITIVE_PLAYER
+  CASUAL_PLAYER
+  RECRUIT
+  VISITOR
+  SPECTATOR
+  ADMIN
+  OWNER
+}
+
+enum AccountStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+enum ApplicationStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  ACCEPTED
+  APPROVED
+  REJECTED
+  PENDING_TRYOUT
+  TRYOUT_COMPLETED
+}
+
+enum FinalDecision {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum RosterType {
+  COMPETITIVE
+  CASUAL
+}
+
+enum ActivityStatus {
+  ACTIVE
+  INACTIVE
+  ON_BREAK
+}
+
+enum AchievementCategory {
+  TOURNAMENT
+  COMMUNITY
+  CREED
+}
+
+enum NotificationSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+// ============= CORE AUTHENTICATION & PROFILES =============
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  emailVerified DateTime?
+  password_hash String?
+  realName      String?
+  age           Int?
+  joinedAt      DateTime?
+  discord_id    String?  @unique
+  role          UserRole @default(VISITOR)
+  accountStatus AccountStatus @default(ACTIVE)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  profile           MemberProfile?
+  applications      Application[]
+  tryoutEvaluations Tryout[]       @relation("evaluator")
+  achievementsIssued Achievement[] @relation("issuedBy")
+  auditLogs         AuditLog[]
+  assetConfigs      AssetConfig[]  @relation("updatedBy")
+}
+
+model MemberProfile {
+  id              String         @id @default(cuid())
+  userId          String         @unique
+  inGameName      String
+  gameUID         String?
+  avatarUrl       String?
+  bannerUrl       String?
+  clanRank        String         @default("RECRUIT")
+  joinDate        DateTime?
+  oathAccepted    Boolean        @default(false)
+  oathDate        DateTime?
+  activityStatus  ActivityStatus @default(ACTIVE)
+  bio             String?
+  socialLinks     Json?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  // Relations
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rosters     Roster[]
+  achievements MemberAchievement[]
+
+  @@index([userId])
+}
+
+model Member {
+  id        String   @id @default(cuid())
+  ign       String
+  gender    String
+  joinedAt  DateTime @default(now())
+  gameId    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  game Game? @relation(fields: [gameId], references: [id], onDelete: SetNull)
+
+  @@index([gameId])
+}
+
+// ============= GAMES & ROSTERS =============
+
+model Game {
+  id                 String  @id @default(cuid())
+  title              String  @unique
+  slug               String  @unique
+  description        String?
+  bannerUrl          String?
+  websiteUrl         String?
+  isActive           Boolean @default(true)
+  recruitmentStatus  Boolean @default(true)
+  competitiveEnabled Boolean @default(true)
+  casualEnabled      Boolean @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  // Relations
+  rosters      Roster[]
+  applications Application[]
+  members      Member[]
+}
+
+model Roster {
+  id              String     @id @default(cuid())
+  gameId          String
+  memberProfileId String
+  rosterType      RosterType
+  position        String?
+  joinedAt        DateTime   @default(now())
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  // Relations
+  game          Game           @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  memberProfile MemberProfile  @relation(fields: [memberProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, memberProfileId, rosterType])
+  @@index([gameId])
+  @@index([memberProfileId])
+}
+
+// ============= RECRUITMENT WORKFLOW SYSTEM =============
+
+model Application {
+  id                  String            @id @default(cuid())
+  userId              String?
+  gameId              String?
+  fullName            String
+  age                 Int
+  gender              String
+  location            String
+  discordUsername     String?
+  facebookProfileUrl  String
+  tiktokProfileUrl    String
+  facebookProofUrl    String
+  tiktokProofUrl      String
+  currentIgn          String
+  currentRank         String?
+  playstyle           String?
+  profileScreenshotUrl String?
+  rankScreenshotUrl   String?
+  status              ApplicationStatus @default(SUBMITTED)
+  appliedAt           DateTime          @default(now())
+  reviewedAt          DateTime?
+  reviewedBy          String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  // Relations
+  user    User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game    Game?    @relation(fields: [gameId], references: [id], onDelete: SetNull)
+  tryouts Tryout[]
+
+  @@index([userId])
+  @@index([gameId])
+  @@index([status])
+}
+
+model Tryout {
+  id                  String        @id @default(cuid())
+  applicationId       String
+  scheduledTime       DateTime
+  evaluatorId         String?
+  weaponMasterScore   Int?
+  shootingRangeScore  Int?
+  bo3Result           String?
+  oneVsOneResult      String?
+  evaluationNotes     String?
+  finalDecision       FinalDecision @default(PENDING)
+  completedAt         DateTime?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  // Relations
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  evaluator   User?       @relation("evaluator", fields: [evaluatorId], references: [id], onDelete: SetNull)
+
+  @@index([applicationId])
+  @@index([evaluatorId])
+}
+
+// ============= HALL OF FAME & ACHIEVEMENTS =============
+
+model Achievement {
+  id          String               @id @default(cuid())
+  title       String
+  description String
+  category    AchievementCategory
+  iconUrl     String?
+  issuedBy    String
+  issuedAt    DateTime             @default(now())
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  // Relations
+  user    User                 @relation("issuedBy", fields: [issuedBy], references: [id], onDelete: Cascade)
+  members MemberAchievement[]
+
+  @@index([category])
+  @@index([issuedBy])
+}
+
+model MemberAchievement {
+  id            String   @id @default(cuid())
+  memberProfileId String
+  achievementId String
+  awardedDate   DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  // Relations
+  memberProfile MemberProfile @relation(fields: [memberProfileId], references: [id], onDelete: Cascade)
+  achievement   Achievement   @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([memberProfileId, achievementId])
+  @@index([memberProfileId])
+  @@index([achievementId])
+}
+
+// ============= GLOBAL ANNOUNCEMENTS & NOTIFICATIONS =============
+
+model GlobalAnnouncement {
+  id        String                @id @default(cuid())
+  title     String
+  content   String
+  severity  NotificationSeverity  @default(INFO)
+  isActive  Boolean               @default(true)
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+  expiresAt DateTime?
+
+  @@index([isActive])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  createdAt DateTime @default(now())
+}
+
+// ============= FORUM SYSTEM =============
+
+model ForumSection {
+  id          String   @id @default(cuid())
+  title       String   @unique
+  slug        String   @unique
+  description String?
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  threads ForumThread[]
+}
+
+model ForumThread {
+  id              String   @id @default(cuid())
+  sectionId       String
+  title           String
+  content         String
+  creatorId       String?
+  isPinned        Boolean  @default(false)
+  isLocked        Boolean  @default(false)
+  viewCount       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  section  ForumSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  replies  ForumReply[]
+
+  @@index([sectionId])
+}
+
+model ForumReply {
+  id        String   @id @default(cuid())
+  threadId  String
+  content   String
+  creatorId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  thread ForumThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId])
+}
+
+// ============= EVENTS & TOURNAMENTS =============
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  eventType   String   // "MEETING", "SCRIM", "PRACTICE", "TOURNAMENT", "GIVEAWAY"
+  startTime   DateTime
+  endTime     DateTime?
+  location    String?
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  isPinned    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  rsvps EventRSVP[]
+}
+
+model EventRSVP {
+  id        String   @id @default(cuid())
+  eventId   String
+  userId    String?
+  status    String   // "ATTENDING", "MAYBE", "NOT_ATTENDING"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+}
+
+model Tournament {
+  id              String   @id @default(cuid())
+  title           String
+  description     String?
+  gameId          String?
+  status          String   @default("UPCOMING") // "UPCOMING", "ONGOING", "COMPLETED"
+  startDate       DateTime
+  endDate         DateTime?
+  bannerUrl       String?
+  prizePool       String?
+  maxTeams        Int?
+  isPinned        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  brackets TournamentBracket[]
+}
+
+model TournamentBracket {
+  id            String   @id @default(cuid())
+  tournamentId  String
+  roundNumber   Int
+  matchData     Json
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  @@index([tournamentId])
+}
+
+// ============= GLOBAL ASSETS & CONFIGURATIONS =============
+
+model AssetConfig {
+  key       String  @id
+  valueUrl  String
+  updatedBy String?
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User? @relation("updatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+}
+
+// ============= AUDIT LOGGING =============
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  userId       String?
+  action       String
+  ipAddress    String
+  previousState Json?
+  newState     Json?
+  timestamp    DateTime @default(now())
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([timestamp])
+}
