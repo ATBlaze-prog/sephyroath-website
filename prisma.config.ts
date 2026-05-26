@@ -1,9 +1,8 @@
-import { defineConfig, env } from "prisma/config";
+import { defineConfig } from "prisma/config";
 
 export default defineConfig({
   datasource: {
-    // Vercel injects environment variables directly into process.env, 
-    // so env() will pick them up automatically.
-    url: env("DATABASE_URL"),
+    // Vercel handles the mapping of DATABASE_URL automatically
+    url: process.env.DATABASE_URL as string,
   },
 });
