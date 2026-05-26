@@ -7,16 +7,25 @@ import AuthProvider from '@/providers/AuthProvider'; // 1. Imported safely
 
 
 export const metadata: Metadata = {
-  title: 'SephyrOath Gaming - Bound by Oath. Guided by Honor.',
-  description:
-    'A premium esports community management platform for SephyrOath Gaming. Join our competitive teams, participate in tournaments, and build your legacy.',
+  title: 'SephyrOath Gaming | Official Clan Website',
+  description: 'Official website of SephyrOath Gaming.',
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+    other: [
+      { rel: 'icon', url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { rel: 'icon', url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { rel: 'icon', url: '/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
+      { rel: 'icon', url: '/android-chrome-512x512.png', sizes: '512x512', type: 'image/png' },
+    ],
+  },
   keywords: ['gaming', 'esports', 'community', 'clan', 'competitive'],
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    title: 'SephyrOath Gaming Platform',
-    description: 'Join the SephyrOath Gaming Community',
-    siteName: 'SephyrOath',
+    title: 'SephyrOath Gaming | Official Clan Website',
+    description: 'Official website of SephyrOath Gaming.',
+    siteName: 'SephyrOath Gaming',
   },
 };
 

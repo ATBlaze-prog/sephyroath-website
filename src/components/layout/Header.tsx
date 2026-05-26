@@ -48,16 +48,6 @@ export default function Header() {
               priority
             />
           </div>
-          <div className="relative w-12 h-12 flex-shrink-0 hidden sm:block">
-            <Image
-              src={ASSETS.CLAN_LOGO}
-              alt="Clan Logo"
-              width={48}
-              height={48}
-              className="object-contain rounded-lg border border-so-primary/30"
-              priority
-            />
-          </div>
           <span className="hidden sm:inline font-heading font-bold text-so-gold text-lg">
             SephyrOath
           </span>
