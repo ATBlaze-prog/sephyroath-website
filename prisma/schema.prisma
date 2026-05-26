@@ -1,15 +1,10 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"] // Add this line!
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  // Keep the url empty or remove the line entirely; 
-  // the adapter handles the connection now.
+  url      = env("DATABASE_URL")
 }
 
 // ============= ENUMS =============

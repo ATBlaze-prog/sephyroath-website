@@ -128,7 +128,7 @@ export default function ThCreedPage() {
 
             <div className="mt-8 pt-8 border-t border-so-gold/20 text-center">
               <p className="text-so-gold-light font-semibold italic">
-                "By oath, we become more than players—we become family."
+                  &quot;By oath, we become more than players—we become family.&quot;
               </p>
             </div>
           </motion.div>
@@ -251,13 +251,13 @@ export default function ThCreedPage() {
           </h2>
           <div className="space-y-6 max-w-3xl mx-auto">
             <p className="text-3xl md:text-4xl font-bold text-gradient">
-              "Bound by Oath. Guided by Honor. Living by the Creed."
+              &quot;Bound by Oath. Guided by Honor. Living by the Creed.&quot;
             </p>
             <p className="text-xl text-so-gray-300">
               Alternative Induction & Event Motto
             </p>
             <p className="text-3xl md:text-4xl font-bold text-so-gold">
-              "Bound by Oath. Guided by Honor. United as One."
+               &quot;Bound by Oath. Guided by Honor. United as One.&quot;
             </p>
           </div>
         </motion.div>
