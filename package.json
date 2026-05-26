@@ -4,12 +4,12 @@
   "description": "SephyrOath Gaming Community Management Platform",
   "type": "module",
   "scripts": {
+    "build": "./node_modules/.bin/prisma generate && next build",
     "dev": "next dev",
-    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate",
-    "generate": "prisma generate"
+    "postinstall": "./node_modules/.bin/prisma generate",
+    "generate": "./node_modules/.bin/prisma generate"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.4.0",
