@@ -9,9 +9,12 @@ const nextConfig = {
       },
     ],
   },
-  // ⚡ Add this block right here to bypass the '--ignoreDeprecations' flag issue:
   typescript: {
     ignoreBuildErrors: true,
+  },
+  // ⚡ This ensures Prisma's engine is included in the deployment bundle
+  outputFileTracingIncludes: {
+    '/api/**/*': ['./node_modules/.prisma/client/**/*'],
   },
 };
 
