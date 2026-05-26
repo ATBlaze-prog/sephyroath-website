@@ -10,9 +10,7 @@ import { compare } from 'bcryptjs';
 import { prisma } from './prisma';
 import { getServerSession as nextAuthGetServerSession } from 'next-auth/next';
 
-if (!process.env.NEXTAUTH_SECRET) {
-  throw new Error('NEXTAUTH_SECRET is not set');
-}
+const nextAuthSecret = process.env.NEXTAUTH_SECRET ?? (process.env.NODE_ENV === 'development' ? 'dev-secret' : undefined);
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -97,7 +95,7 @@ export const authOptions: NextAuthOptions = {
   },
 
   jwt: {
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: nextAuthSecret,
     maxAge: 30 * 24 * 60 * 60,
   },
 
