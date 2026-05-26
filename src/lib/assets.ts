@@ -6,6 +6,7 @@
 export const ASSETS = {
   // Local assets (in public/assets/) with safe URL space encoding
   LOGO: '/assets/Logo%20Only.jpg',
+  CLAN_LOGO: '/assets/ClanLogo.jpg',
   BANNER: '/assets/SephyrOath%20Cover.jpg',
 
   // Database keys (for dynamic injection from backend)
