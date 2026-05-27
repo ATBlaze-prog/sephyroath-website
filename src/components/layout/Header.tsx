@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { ASSETS } from '@/lib/assets';
 import { Mail, ShieldCheck, Menu } from 'lucide-react';
@@ -28,10 +28,32 @@ const navLinks: NavLink[] = [
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
+  const [discordInvite, setDiscordInvite] = useState<string>(process.env.NEXT_PUBLIC_DISCORD_INVITE || '');
   const { data: session } = useSession();
 
   const isAdmin = !!session?.user?.role && ['ADMIN', 'OWNER'].includes(session.user.role);
   const isOwner = session?.user?.role === 'OWNER';
+
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const response = await fetch('/api/settings');
+        const json = await response.json();
+        if (!response.ok) return;
+        const settings = json.data.reduce((acc: Record<string, string>, item: any) => {
+          if (item.key && item.valueUrl) {
+            acc[item.key] = item.valueUrl;
+          }
+          return acc;
+        }, {});
+        setDiscordInvite(settings.discord_invite || process.env.NEXT_PUBLIC_DISCORD_INVITE || '');
+      } catch (error) {
+        console.error('Unable to load site settings:', error);
+      }
+    }
+
+    loadSettings();
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 backdrop-blur-md bg-so-dark/80 border-b border-so-primary/20">
@@ -69,7 +91,7 @@ export default function Header() {
         {/* Right Side - Auth & Discord */}
         <div className="relative flex items-center gap-4">
           <a
-            href={process.env.NEXT_PUBLIC_DISCORD_INVITE || '#'}
+            href={discordInvite || '#'}
             target="_blank"
             rel="noopener noreferrer"
             className="hidden sm:inline-block px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"

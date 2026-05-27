@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ASSETS } from '@/lib/assets';
 
 interface AnnouncementBanner {
@@ -15,6 +15,7 @@ interface AnnouncementBanner {
 export default function HomePage() {
   const [activeMembers, setActiveMembers] = useState<number>(0);
   const [announcements] = useState<AnnouncementBanner[]>([]);
+  const [discordInvite, setDiscordInvite] = useState<string>(process.env.NEXT_PUBLIC_DISCORD_INVITE || '');
 
   useEffect(() => {
     async function fetchMemberCount() {
@@ -27,7 +28,25 @@ export default function HomePage() {
       }
     }
 
+    async function loadSettings() {
+      try {
+        const response = await fetch('/api/settings');
+        const json = await response.json();
+        if (!response.ok) return;
+        const settings = json.data.reduce((acc: Record<string, string>, item: any) => {
+          if (item.key && item.valueUrl) {
+            acc[item.key] = item.valueUrl;
+          }
+          return acc;
+        }, {});
+        setDiscordInvite(settings.discord_invite || process.env.NEXT_PUBLIC_DISCORD_INVITE || '');
+      } catch (error) {
+        console.error('Unable to load settings', error);
+      }
+    }
+
     fetchMemberCount();
+    loadSettings();
   }, []);
 
   const containerVariants = {
@@ -106,7 +125,7 @@ export default function HomePage() {
               Apply Now
             </Link>
             <a
-              href={process.env.NEXT_PUBLIC_DISCORD_INVITE || '#'}
+              href={discordInvite || '#'}
               target="_blank"
               rel="noopener noreferrer"
               className="px-6 py-3 rounded-lg border-2 border-blue-500 text-blue-400 hover:bg-blue-500/10 transition-all duration-300 inline-block text-center backdrop-blur-sm"
