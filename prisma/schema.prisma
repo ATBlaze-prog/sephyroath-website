@@ -63,6 +63,23 @@ enum AchievementCategory {
   CREED
 }
 
+enum HallOfFameCategoryType {
+  MAJOR_TOURNAMENT_CHAMPION
+  SCRIMMAGE_CHAMPION
+  HOME_SCRIM_CHAMPION
+  MVP
+  BEST_RECRUITER
+  CLAN_CONTRIBUTOR
+  CLAN_VETERAN
+  SPECIAL_RECOGNITION
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
 enum NotificationSeverity {
   INFO
   WARNING
@@ -92,6 +109,9 @@ model User {
   achievementsIssued Achievement[] @relation("issuedBy")
   auditLogs         AuditLog[]
   assetConfigs      AssetConfig[]  @relation("updatedBy")
+  createdEvents     Event[]        @relation("eventCreator")
+  createdTournaments Tournament[]  @relation("tournamentCreator")
+  hallOfFameAwards  HallOfFameAchievement[] @relation("hallOfFameAwarder")
 }
 
 model MemberProfile {
@@ -115,6 +135,7 @@ model MemberProfile {
   user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   rosters     Roster[]
   achievements MemberAchievement[]
+  hallOfFameAchievements HallOfFameAchievement[] @relation("hallOfFameAchievements")
 
   @@index([userId])
 }
@@ -271,6 +292,29 @@ model MemberAchievement {
   @@index([achievementId])
 }
 
+// ============= HALL OF FAME =============
+
+model HallOfFameAchievement {
+  id              String   @id @default(cuid())
+  memberProfileId String
+  category        HallOfFameCategoryType
+  title           String
+  description     String?
+  imageUrl        String?
+  awardedDate     DateTime @default(now())
+  awardedBy       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  memberProfile MemberProfile @relation("hallOfFameAchievements", fields: [memberProfileId], references: [id], onDelete: Cascade)
+  awardedByUser User? @relation("hallOfFameAwarder", fields: [awardedBy], references: [id], onDelete: SetNull)
+
+  @@index([memberProfileId])
+  @@index([category])
+  @@index([awardedBy])
+}
+
 // ============= GLOBAL ANNOUNCEMENTS & NOTIFICATIONS =============
 
 model GlobalAnnouncement {
@@ -352,14 +396,18 @@ model Event {
   startTime   DateTime
   endTime     DateTime?
   location    String?
-  imageUrl    String?
-  isActive    Boolean  @default(true)
-  isPinned    Boolean  @default(false)
+  bannerUrl   String?
+  status      EventStatus @default(DRAFT)
+  createdBy   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   // Relations
   rsvps EventRSVP[]
+  creator User? @relation("eventCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([createdBy])
 }
 
 model EventRSVP {
@@ -388,12 +436,20 @@ model Tournament {
   bannerUrl       String?
   prizePool       String?
   maxTeams        Int?
-  isPinned        Boolean  @default(false)
+  registrationDeadline DateTime?
+  registrationLink String?
+  schedule        String?
+  rules           String?
+  createdBy       String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   // Relations
   brackets TournamentBracket[]
+  creator User? @relation("tournamentCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([createdBy])
 }
 
 model TournamentBracket {

@@ -4,14 +4,24 @@ import { getServerAuthSession } from '@/lib/auth';
 
 export async function GET() {
   try {
-    const members = await prisma.member.findMany({
-      orderBy: { joinedAt: 'desc' },
-      include: { game: true },
+    // Return both Member and MemberProfile for flexibility
+    const memberProfiles = await prisma.memberProfile.findMany({
+      select: {
+        id: true,
+        inGameName: true,
+        avatarUrl: true,
+        clanRank: true,
+        joinDate: true,
+      },
+      orderBy: {
+        inGameName: 'asc',
+      },
     });
-    return NextResponse.json(members);
+
+    return NextResponse.json({ success: true, data: memberProfiles });
   } catch (error) {
-    console.error('Error loading members', error);
-    return NextResponse.json({ error: 'Failed to load members' }, { status: 500 });
+    console.error('Error fetching members:', error);
+    return NextResponse.json({ success: false, error: 'Failed to fetch members' }, { status: 500 });
   }
 }
 

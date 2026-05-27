@@ -1,7 +1,7 @@
 /**
- * Tournaments API Route
- * POST: Create new tournament (Admin/Owner only)
- * GET: Fetch all tournaments
+ * Hall of Fame API Route
+ * POST: Create new achievement (Admin/Owner only)
+ * GET: Fetch all achievements
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -14,20 +14,31 @@ import { UserRole } from '@prisma/client';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status');
+    const category = searchParams.get('category');
+    const memberProfileId = searchParams.get('memberProfileId');
 
     const where: any = {};
-    if (status) {
-      where.status = status;
+    if (category) {
+      where.category = category;
+    }
+    if (memberProfileId) {
+      where.memberProfileId = memberProfileId;
     }
 
-    const tournaments = await prisma.tournament.findMany({
+    const achievements = await prisma.hallOfFameAchievement.findMany({
       where,
       orderBy: {
-        startDate: 'asc',
+        awardedDate: 'desc',
       },
       include: {
-        creator: {
+        memberProfile: {
+          select: {
+            id: true,
+            inGameName: true,
+            avatarUrl: true,
+          },
+        },
+        awardedByUser: {
           select: {
             id: true,
             email: true,
@@ -36,11 +47,11 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ success: true, data: tournaments });
+    return NextResponse.json({ success: true, data: achievements });
   } catch (error) {
-    console.error('Error fetching tournaments:', error);
+    console.error('Error fetching achievements:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch tournaments' },
+      { success: false, error: 'Failed to fetch achievements' },
       { status: 500 }
     );
   }
@@ -69,48 +80,34 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const {
-      title,
-      description,
-      gameId,
-      status,
-      startDate,
-      endDate,
-      bannerUrl,
-      prizePool,
-      maxTeams,
-      registrationDeadline,
-      registrationLink,
-      schedule,
-      rules,
-    } = body;
+    const { memberProfileId, category, title, description, imageUrl } = body;
 
-    if (!title || !startDate) {
+    if (!memberProfileId || !category || !title) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    const tournament = await prisma.tournament.create({
+    const achievement = await prisma.hallOfFameAchievement.create({
       data: {
+        memberProfileId,
+        category,
         title,
         description,
-        gameId,
-        status: status || 'UPCOMING',
-        startDate: new Date(startDate),
-        endDate: endDate ? new Date(endDate) : undefined,
-        bannerUrl,
-        prizePool,
-        maxTeams,
-        registrationDeadline: registrationDeadline ? new Date(registrationDeadline) : undefined,
-        registrationLink,
-        schedule,
-        rules,
-        createdBy: user.id,
+        imageUrl,
+        awardedBy: user.id,
+        awardedDate: new Date(),
       },
       include: {
-        creator: {
+        memberProfile: {
+          select: {
+            id: true,
+            inGameName: true,
+            avatarUrl: true,
+          },
+        },
+        awardedByUser: {
           select: {
             id: true,
             email: true,
@@ -119,11 +116,11 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ success: true, data: tournament }, { status: 201 });
+    return NextResponse.json({ success: true, data: achievement }, { status: 201 });
   } catch (error) {
-    console.error('Error creating tournament:', error);
+    console.error('Error creating achievement:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to create tournament' },
+      { success: false, error: 'Failed to create achievement' },
       { status: 500 }
     );
   }
