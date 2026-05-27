@@ -135,6 +135,7 @@ model User {
   createdTournaments Tournament[]  @relation("tournamentCreator")
   hallOfFameAwards  HallOfFameAchievement[] @relation("hallOfFameAwarder")
   announcements     Announcement[] @relation("announcementAuthor")
+  uploadedMedia     MediaAsset[]
 }
 
 model MemberProfile {
@@ -530,6 +531,25 @@ model AssetConfig {
 
   // Relations
   user User? @relation("updatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+}
+
+model MediaAsset {
+  id         String   @id @default(cuid())
+  filename   String
+  url        String
+  publicId   String   @unique
+  mimeType   String
+  size       Int
+  width      Int?
+  height     Int?
+  uploadedBy String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User? @relation(fields: [uploadedBy], references: [id], onDelete: SetNull)
+
+  @@index([uploadedBy])
+  @@index([createdAt])
 }
 
 // ============= AUDIT LOGGING =============

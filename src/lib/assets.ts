@@ -25,12 +25,13 @@ export async function getAssetUrl(
   fallbackUrl: string
 ): Promise<string> {
   try {
-    // NOTE: This is ready for your future Cloudinary database calls!
-    // const res = await fetch(`/api/assets/${assetKey}`);
-    // const data = await res.json();
-    // return data.url || fallbackUrl;
+    const res = await fetch(`/api/assets/${assetKey}`);
+    if (!res.ok) {
+      return fallbackUrl;
+    }
 
-    return fallbackUrl;
+    const data = await res.json();
+    return data.valueUrl || fallbackUrl;
   } catch (error) {
     console.error(`Failed to fetch asset ${assetKey}:`, error);
     return fallbackUrl;

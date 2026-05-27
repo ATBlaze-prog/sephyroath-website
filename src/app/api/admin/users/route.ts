@@ -41,6 +41,14 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (action === 'delete') {
+      const targetUser = await prisma.user.findUnique({ where: { id: userId } });
+      if (targetUser?.role === 'OWNER') {
+        return NextResponse.json(
+          { error: 'Cannot delete Owner account' },
+          { status: 403 }
+        );
+      }
+
       await prisma.user.delete({ where: { id: userId } });
       return NextResponse.json({ success: true });
     }

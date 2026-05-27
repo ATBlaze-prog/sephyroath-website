@@ -98,11 +98,16 @@ export default function OwnerAccountManager({ admins }: OwnerAccountManagerProps
                 <button
                   type="button"
                   onClick={() => updateUser(admin.id, 'delete')}
-                  disabled={busy === admin.id}
+                  disabled={busy === admin.id || admin.role === 'OWNER'}
                   className="rounded-2xl border border-so-gray-500 px-4 py-2 text-sm text-so-gray-300 hover:bg-so-gray-600/20 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Delete
                 </button>
+                {admin.role === 'OWNER' && (
+                  <span className="ml-2 rounded-full bg-yellow-500/10 px-3 py-1 text-xs text-yellow-300">
+                    Protected
+                  </span>
+                )}
               </div>
             </div>
           </div>

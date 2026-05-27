@@ -6,6 +6,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
+import { requireOwnerAccess } from '@/lib/rbac';
+import { UserRole } from '@prisma/client';
 
 export async function GET(
   _request: NextRequest,
@@ -33,7 +37,16 @@ export async function GET(
 
 export async function POST(request: NextRequest) {
   try {
-    // TODO: Add authentication check for admin users
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email: session.user.email } });
+    if (!user || !requireOwnerAccess(user.role as UserRole)) {
+      return NextResponse.json({ error: 'Forbidden: Owner access required' }, { status: 403 });
+    }
+
     const body = await request.json();
     const { key, valueUrl } = body;
 
