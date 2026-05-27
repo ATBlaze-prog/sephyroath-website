@@ -6,7 +6,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Calendar, Trophy, Award, Users, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Calendar, Trophy, Award, Users, Settings, LogOut, Megaphone, Share2, Mail } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 
 const navItems = [
@@ -15,6 +15,9 @@ const navItems = [
   { href: '/admin/tournaments', label: 'Tournaments', icon: Trophy },
   { href: '/admin/hall-of-fame', label: 'Hall of Fame', icon: Award },
   { href: '/admin/members', label: 'Members', icon: Users },
+  { href: '/admin/announcements', label: 'Announcements', icon: Megaphone },
+  { href: '/admin/social-media', label: 'Social Media', icon: Share2 },
+  { href: '/admin/inbox', label: 'Applications', icon: Mail },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 

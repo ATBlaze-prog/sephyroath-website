@@ -78,6 +78,28 @@ enum EventStatus {
   DRAFT
   PUBLISHED
   ARCHIVED
+  UPCOMING
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum TournamentStatus {
+  REGISTRATION_OPEN
+  UPCOMING
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum SocialMediaPlatform {
+  FACEBOOK
+  DISCORD
+  TIKTOK
+  YOUTUBE
+  INSTAGRAM
+  TWITCH
+  WEBSITE
 }
 
 enum NotificationSeverity {
@@ -112,6 +134,7 @@ model User {
   createdEvents     Event[]        @relation("eventCreator")
   createdTournaments Tournament[]  @relation("tournamentCreator")
   hallOfFameAwards  HallOfFameAchievement[] @relation("hallOfFameAwarder")
+  announcements     Announcement[] @relation("announcementAuthor")
 }
 
 model MemberProfile {
@@ -330,6 +353,37 @@ model GlobalAnnouncement {
   @@index([isActive])
 }
 
+model Announcement {
+  id            String   @id @default(cuid())
+  title         String
+  content       String
+  featuredImage String?
+  author        String?
+  publishedAt   DateTime @default(now())
+  isPublished   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  authorUser User? @relation("announcementAuthor", fields: [author], references: [id], onDelete: SetNull)
+
+  @@index([isPublished])
+  @@index([publishedAt])
+}
+
+model SocialMediaLink {
+  id        String   @id @default(cuid())
+  platform  SocialMediaPlatform
+  url       String
+  isEnabled Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([platform])
+  @@index([isEnabled])
+}
+
 model Notification {
   id        String   @id @default(cuid())
   title     String
@@ -430,7 +484,7 @@ model Tournament {
   title           String
   description     String?
   gameId          String?
-  status          String   @default("UPCOMING") // "UPCOMING", "ONGOING", "COMPLETED"
+  status          TournamentStatus @default(UPCOMING)
   startDate       DateTime
   endDate         DateTime?
   bannerUrl       String?
