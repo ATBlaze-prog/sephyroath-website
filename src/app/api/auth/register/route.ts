@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { hash } from 'bcryptjs';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { UserRole, AccountStatus } from '@prisma/client';
+import { UserRole, AccountStatus, ActivityStatus } from '@prisma/client';
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -35,6 +35,18 @@ export async function POST(request: NextRequest) {
         joinedAt: parsed.joinedAt,
         role: UserRole.ADMIN,
         accountStatus: AccountStatus.PENDING,
+      },
+    });
+
+    // Automatically create a MemberProfile for the new user
+    // This ensures the user appears in admin members list and hall of fame dropdown
+    await prisma.memberProfile.create({
+      data: {
+        userId: user.id,
+        inGameName: parsed.realName || parsed.email.split('@')[0], // Use real name or email prefix as IGN
+        clanRank: 'RECRUIT', // Default rank for new members
+        oathAccepted: false,
+        activityStatus: 'ACTIVE',
       },
     });
 

@@ -56,9 +56,38 @@ export async function DELETE(request: NextRequest) {
   }
 
   try {
+    const user = await prisma.user.findUnique({
+      where: { email: (session.user as any).email },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     const body = await request.json();
+    
+    // Fetch member before deletion for audit log
+    const member = await prisma.member.findUnique({
+      where: { id: body.id },
+    });
+
+    if (!member) {
+      return NextResponse.json({ error: 'Member not found' }, { status: 404 });
+    }
+
     const deleted = await prisma.member.delete({
       where: { id: body.id },
+    });
+
+    // Log audit event
+    await prisma.auditLog.create({
+      data: {
+        userId: user.id,
+        action: 'DELETE_MEMBER',
+        ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
+        previousState: member,
+        newState: null,
+      },
     });
 
     return NextResponse.json(deleted);

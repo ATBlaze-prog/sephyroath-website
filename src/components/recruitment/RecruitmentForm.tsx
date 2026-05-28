@@ -6,14 +6,14 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 const recruitmentSchema = z.object({
-  fullName: z.string().min(1).max(50),
-  age: z.coerce.number().int().positive(),
-  gender: z.enum(['Male', 'Female', 'Others']),
-  location: z.string().min(1),
-  facebookProfileUrl: z.string().url(),
-  tiktokProfileUrl: z.string().url(),
-  gameId: z.string().min(1),
-  currentIgn: z.string().min(1).max(50),
+  fullName: z.string().min(1, 'Full name is required').max(50),
+  age: z.coerce.number().int().positive('Age must be a positive number').nullable().optional(),
+  gender: z.enum(['Male', 'Female', 'Others']).optional(),
+  location: z.string().min(1, 'Location is required').max(100),
+  facebookProfileUrl: z.string().url('Please enter a valid Facebook URL').or(z.literal('')).optional(),
+  tiktokProfileUrl: z.string().url('Please enter a valid TikTok URL').or(z.literal('')).optional(),
+  gameId: z.string().min(1, 'Please select a game or enter game name'),
+  currentIgn: z.string().min(1, 'In-game name is required').max(50),
   userId: z.string().optional(),
 });
 

@@ -30,10 +30,6 @@ export default function TournamentsPanel() {
     bannerUrl: '',
     prizePool: '',
     maxTeams: '',
-    registrationDeadline: '',
-    registrationLink: '',
-    schedule: '',
-    rules: '',
   });
 
   useEffect(() => {
@@ -80,10 +76,6 @@ export default function TournamentsPanel() {
         bannerUrl: '',
         prizePool: '',
         maxTeams: '',
-        registrationDeadline: '',
-        registrationLink: '',
-        schedule: '',
-        rules: '',
       });
     } catch (error) {
       console.error('Error saving tournament:', error);
@@ -102,12 +94,6 @@ export default function TournamentsPanel() {
       bannerUrl: tournament.bannerUrl || '',
       prizePool: tournament.prizePool || '',
       maxTeams: tournament.maxTeams?.toString() || '',
-      registrationDeadline: tournament.registrationDeadline
-        ? new Date(tournament.registrationDeadline).toISOString().slice(0, 16)
-        : '',
-      registrationLink: tournament.registrationLink || '',
-      schedule: tournament.schedule || '',
-      rules: tournament.rules || '',
     });
     setEditingId(tournament.id);
     setShowForm(true);
@@ -144,10 +130,6 @@ export default function TournamentsPanel() {
               bannerUrl: '',
               prizePool: '',
               maxTeams: '',
-              registrationDeadline: '',
-              registrationLink: '',
-              schedule: '',
-              rules: '',
             });
           }}
           className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-colors"
@@ -217,37 +199,6 @@ export default function TournamentsPanel() {
               placeholder="Banner URL"
               value={formData.bannerUrl}
               onChange={(e) => setFormData({ ...formData, bannerUrl: e.target.value })}
-              className="w-full bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600"
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input
-                type="datetime-local"
-                placeholder="Registration Deadline"
-                value={formData.registrationDeadline}
-                onChange={(e) => setFormData({ ...formData, registrationDeadline: e.target.value })}
-                className="bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600"
-              />
-              <input
-                type="text"
-                placeholder="Registration Link"
-                value={formData.registrationLink}
-                onChange={(e) => setFormData({ ...formData, registrationLink: e.target.value })}
-                className="bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600"
-              />
-            </div>
-
-            <textarea
-              placeholder="Schedule"
-              value={formData.schedule}
-              onChange={(e) => setFormData({ ...formData, schedule: e.target.value })}
-              className="w-full bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600"
-            />
-
-            <textarea
-              placeholder="Rules"
-              value={formData.rules}
-              onChange={(e) => setFormData({ ...formData, rules: e.target.value })}
               className="w-full bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600"
             />
 

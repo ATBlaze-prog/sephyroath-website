@@ -392,6 +392,38 @@ model Notification {
   createdAt DateTime @default(now())
 }
 
+model AssetConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  valueUrl  String
+  updatedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User? @relation("updatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@index([updatedBy])
+}
+
+model MediaAsset {
+  id         String   @id @default(cuid())
+  filename   String
+  url        String
+  publicId   String   @unique
+  mimeType   String
+  size       Int
+  width      Int?
+  height     Int?
+  uploadedBy String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User? @relation(fields: [uploadedBy], references: [id], onDelete: SetNull)
+
+  @@index([uploadedBy])
+  @@index([createdAt])
+}
+
 // ============= FORUM SYSTEM =============
 
 model ForumSection {
@@ -519,37 +551,6 @@ model TournamentBracket {
   tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 
   @@index([tournamentId])
-}
-
-// ============= GLOBAL ASSETS & CONFIGURATIONS =============
-
-model AssetConfig {
-  key       String  @id
-  valueUrl  String
-  updatedBy String?
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  user User? @relation("updatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
-}
-
-model MediaAsset {
-  id         String   @id @default(cuid())
-  filename   String
-  url        String
-  publicId   String   @unique
-  mimeType   String
-  size       Int
-  width      Int?
-  height     Int?
-  uploadedBy String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  user User? @relation(fields: [uploadedBy], references: [id], onDelete: SetNull)
-
-  @@index([uploadedBy])
-  @@index([createdAt])
 }
 
 // ============= AUDIT LOGGING =============

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import '@/styles/globals.css';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import GlobalAnnouncementBanner from '@/components/layout/GlobalAnnouncementBanner';
 import ParticleCanvas from '@/components/sections/ParticleCanvas';
 import AuthProvider from '@/providers/AuthProvider'; // 1. Imported safely
 
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthProvider>
           <ParticleCanvas />
           <div className="flex flex-col min-h-screen">
+            <GlobalAnnouncementBanner />
             <Header />
             <main className="flex-grow">{children}</main>
             <Footer />

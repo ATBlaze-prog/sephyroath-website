@@ -125,7 +125,7 @@ export default function HomePage() {
               Apply Now
             </Link>
             <a
-              href={discordInvite || '#'}
+              href={discordInvite && discordInvite.startsWith('http') ? discordInvite : process.env.NEXT_PUBLIC_DISCORD_INVITE || '#'}
               target="_blank"
               rel="noopener noreferrer"
               className="px-6 py-3 rounded-lg border-2 border-blue-500 text-blue-400 hover:bg-blue-500/10 transition-all duration-300 inline-block text-center backdrop-blur-sm"

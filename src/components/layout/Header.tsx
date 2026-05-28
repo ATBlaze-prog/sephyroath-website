@@ -91,7 +91,7 @@ export default function Header() {
         {/* Right Side - Auth & Discord */}
         <div className="relative flex items-center gap-4">
           <a
-            href={discordInvite || '#'}
+            href={discordInvite && discordInvite.startsWith('http') ? discordInvite : process.env.NEXT_PUBLIC_DISCORD_INVITE || '#'}
             target="_blank"
             rel="noopener noreferrer"
             className="hidden sm:inline-block px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"

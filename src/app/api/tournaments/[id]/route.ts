@@ -151,8 +151,31 @@ export async function DELETE(
       );
     }
 
+    // Fetch tournament before deletion for audit log
+    const tournament = await prisma.tournament.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!tournament) {
+      return NextResponse.json(
+        { success: false, error: 'Tournament not found' },
+        { status: 404 }
+      );
+    }
+
     await prisma.tournament.delete({
       where: { id: params.id },
+    });
+
+    // Log audit event
+    await prisma.auditLog.create({
+      data: {
+        userId: user.id,
+        action: 'DELETE_TOURNAMENT',
+        ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
+        previousState: tournament,
+        newState: null,
+      },
     });
 
     return NextResponse.json({ success: true, data: { id: params.id } });

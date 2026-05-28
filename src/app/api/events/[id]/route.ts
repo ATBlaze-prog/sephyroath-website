@@ -131,6 +131,25 @@ export async function DELETE(
       );
     }
 
+    // Verify event exists before attempting deletion
+    const eventExists = await prisma.event.findUnique({
+      where: { id: params.id },
+      select: { id: true },
+    });
+
+    if (!eventExists) {
+      return NextResponse.json(
+        { success: false, error: 'Event not found' },
+        { status: 404 }
+      );
+    }
+
+    // Delete associated RSVPs first (if any remain)
+    await prisma.eventRSVP.deleteMany({
+      where: { eventId: params.id },
+    });
+
+    // Now delete the event
     await prisma.event.delete({
       where: { id: params.id },
     });
@@ -138,8 +157,19 @@ export async function DELETE(
     return NextResponse.json({ success: true, data: { id: params.id } });
   } catch (error) {
     console.error('Error deleting event:', error);
+    
+    // Provide specific error messages for different scenarios
+    if (error instanceof Error) {
+      if (error.message.includes('foreign key')) {
+        return NextResponse.json(
+          { success: false, error: 'Cannot delete event: related records exist' },
+          { status: 409 }
+        );
+      }
+    }
+    
     return NextResponse.json(
-      { success: false, error: 'Failed to delete event' },
+      { success: false, error: 'Failed to delete event. Please try again or contact support.' },
       { status: 500 }
     );
   }

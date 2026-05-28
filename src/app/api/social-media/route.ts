@@ -72,18 +72,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if platform already exists
-    const existing = await prisma.socialMediaLink.findUnique({
-      where: { platform },
-    });
-
-    if (existing) {
-      return NextResponse.json(
-        { success: false, error: 'Social media link for this platform already exists' },
-        { status: 400 }
-      );
-    }
-
+    // Allow multiple links per platform - removed unique constraint check
     const link = await prisma.socialMediaLink.create({
       data: {
         platform,
