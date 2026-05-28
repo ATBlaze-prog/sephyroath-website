@@ -4,10 +4,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
-import { requireAdminAccess } from '@/lib/rbac';
-import { UserRole } from '@prisma/client';
+import { getServerAuthSession } from '@/lib/auth';
+import { requireAdminOrOwner, debugLog } from '@/lib/permissions';
 import { deleteImageFromCloudinary } from '@/lib/cloudinary';
 
 export async function GET(
@@ -31,15 +29,12 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
+    const session = await getServerAuthSession();
+    const authResp = requireAdminOrOwner(session as any);
+    if (authResp) return authResp;
 
-    const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-    if (!user || !requireAdminAccess(user.role as UserRole)) {
-      return NextResponse.json({ success: false, error: 'Forbidden: Admin access required' }, { status: 403 });
-    }
+    const user = await prisma.user.findUnique({ where: { email: session?.user?.email } });
+    debugLog('DELETE /api/media/[id]', (session as any)?.user?.role, params.id);
 
     const asset = await prisma.mediaAsset.findUnique({ where: { id: params.id } });
     if (!asset) {

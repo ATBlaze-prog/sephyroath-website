@@ -6,9 +6,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
-import { requireOwnerAccess } from '@/lib/rbac';
+import { getServerAuthSession } from '@/lib/auth';
+import { requireOwner, debugLog } from '@/lib/permissions';
 import { UserRole } from '@prisma/client';
 
 export async function GET(
@@ -37,17 +36,13 @@ export async function GET(
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const session = await getServerAuthSession();
+    const authResp = requireOwner(session as any);
+    if (authResp) return authResp;
 
-    const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-    if (!user || !requireOwnerAccess(user.role as UserRole)) {
-      return NextResponse.json({ error: 'Forbidden: Owner access required' }, { status: 403 });
-    }
-
+    const user = await prisma.user.findUnique({ where: { email: session?.user?.email } });
     const body = await request.json();
+    debugLog('POST /api/assets/:key', (session as any)?.user?.role, body?.key);
     const { key, valueUrl } = body;
 
     if (!key || !valueUrl) {

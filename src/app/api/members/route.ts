@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerAuthSession } from '@/lib/auth';
+import { requireAdminOrOwner, debugLog } from '@/lib/permissions';
 
 export async function GET() {
   try {
@@ -27,12 +28,12 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const session = await getServerAuthSession();
-  if (!session?.user?.role || !['ADMIN', 'OWNER'].includes((session.user as any).role)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const authResp = requireAdminOrOwner(session as any);
+  if (authResp) return authResp;
 
   try {
     const body = await request.json();
+    debugLog('POST /api/members', body, 'by', (session as any)?.user?.role);
     const member = await prisma.member.create({
       data: {
         ign: body.ign,
@@ -51,33 +52,20 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   const session = await getServerAuthSession();
-  if (!session?.user?.role || !['ADMIN', 'OWNER'].includes((session.user as any).role)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const authResp = requireAdminOrOwner(session as any);
+  if (authResp) return authResp;
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { email: (session.user as any).email },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
+    const user = await prisma.user.findUnique({ where: { email: (session.user as any).email } });
+    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
     const body = await request.json();
-    
+
     // Fetch member before deletion for audit log
-    const member = await prisma.member.findUnique({
-      where: { id: body.id },
-    });
+    const member = await prisma.member.findUnique({ where: { id: body.id } });
+    if (!member) return NextResponse.json({ error: 'Member not found' }, { status: 404 });
 
-    if (!member) {
-      return NextResponse.json({ error: 'Member not found' }, { status: 404 });
-    }
-
-    const deleted = await prisma.member.delete({
-      where: { id: body.id },
-    });
+    const deleted = await prisma.member.delete({ where: { id: body.id } });
 
     // Log audit event
     await prisma.auditLog.create({
@@ -89,6 +77,8 @@ export async function DELETE(request: NextRequest) {
         newState: null,
       },
     });
+
+    debugLog('DELETE /api/members', user.id, body.id);
 
     return NextResponse.json(deleted);
   } catch (error) {

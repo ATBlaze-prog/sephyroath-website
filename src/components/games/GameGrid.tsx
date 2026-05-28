@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useMemo, useState } from 'react';
+import ImageUploader from '@/components/admin/ImageUploader';
 
 interface GameCard {
   id: string;
@@ -162,15 +163,12 @@ export default function GameGrid({ initialGames, canManage }: GameGridProps) {
                   required
                 />
               </label>
-              <label className="space-y-2 text-sm text-so-gray-200">
-                Banner Image URL
-                <input
-                  type="url"
-                  value={form.bannerUrl}
-                  onChange={(event) => setForm((value) => ({ ...value, bannerUrl: event.target.value }))}
-                  className="w-full rounded-2xl border border-so-primary/30 bg-so-darker px-4 py-3 text-sm text-so-gray-100"
-                />
-              </label>
+              <ImageUploader
+                label="Banner Image"
+                value={form.bannerUrl}
+                onChange={(url) => setForm((value) => ({ ...value, bannerUrl: url }))}
+                helpText="Upload or paste a banner image for the game"
+              />
               <label className="space-y-2 text-sm text-so-gray-200">
                 Official Website URL
                 <input

@@ -4,9 +4,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
-import { requireOwnerAccess } from '@/lib/rbac';
+import { getServerAuthSession } from '@/lib/auth';
+import { requireOwner, debugLog } from '@/lib/permissions';
 import { UserRole } from '@prisma/client';
 
 const VALID_SETTING_KEYS = [
@@ -35,16 +34,12 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
+    const session = await getServerAuthSession();
+    const authResp = requireOwner(session as any);
+    if (authResp) return authResp;
 
-    const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-    if (!user || !requireOwnerAccess(user.role as UserRole)) {
-      return NextResponse.json({ success: false, error: 'Forbidden: Owner access required' }, { status: 403 });
-    }
-
+    const user = await prisma.user.findUnique({ where: { email: session?.user?.email } });
+    debugLog('POST /api/settings by', (session as any)?.user?.role);
     const body = await request.json();
     const { key, valueUrl } = body;
 

@@ -6,11 +6,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { getServerAuthSession } from '@/lib/auth';
+import { requireAdminOrOwner, debugLog } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
-import { requireAdminAccess } from '@/lib/rbac';
-import { UserRole } from '@prisma/client';
 
 export async function GET(
   request: NextRequest,
@@ -52,25 +50,12 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerAuthSession();
+    const authResp = requireAdminOrOwner(session as any);
+    if (authResp) return authResp;
 
-    if (!session?.user?.email) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user || !requireAdminAccess(user.role as UserRole)) {
-      return NextResponse.json(
-        { success: false, error: 'Forbidden: Admin access required' },
-        { status: 403 }
-      );
-    }
+    const user = await prisma.user.findUnique({ where: { email: session?.user?.email } });
+    debugLog('PUT /api/announcements/:id', (session as any)?.user?.role, params.id);
 
     const body = await request.json();
     const { title, content, featuredImage, isPublished } = body;
@@ -110,25 +95,12 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerAuthSession();
+    const authResp = requireAdminOrOwner(session as any);
+    if (authResp) return authResp;
 
-    if (!session?.user?.email) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user || !requireAdminAccess(user.role as UserRole)) {
-      return NextResponse.json(
-        { success: false, error: 'Forbidden: Admin access required' },
-        { status: 403 }
-      );
-    }
+    const user = await prisma.user.findUnique({ where: { email: session?.user?.email } });
+    debugLog('DELETE /api/announcements/:id', (session as any)?.user?.role, params.id);
 
     await prisma.announcement.delete({
       where: { id: params.id },

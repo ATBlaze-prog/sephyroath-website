@@ -5,6 +5,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import ImageUploader from '@/components/admin/ImageUploader';
 import { Trash2, Edit2, Plus, Eye, EyeOff } from 'lucide-react';
 
 interface Announcement {
@@ -174,12 +175,11 @@ export default function AnnouncementsPanel() {
               className="w-full bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600"
             />
 
-            <input
-              type="text"
-              placeholder="Featured Image URL"
+            <ImageUploader
+              label="Featured Image"
               value={formData.featuredImage}
-              onChange={(e) => setFormData({ ...formData, featuredImage: e.target.value })}
-              className="w-full bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600"
+              onChange={(url) => setFormData({ ...formData, featuredImage: url })}
+              helpText="Upload or select an image to feature with this announcement"
             />
 
             <label className="flex items-center gap-2 text-white">

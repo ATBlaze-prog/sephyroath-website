@@ -5,6 +5,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import ImageUploader from '@/components/admin/ImageUploader';
 import { Event } from '@prisma/client';
 import { Trash2, Edit2, Plus } from 'lucide-react';
 
@@ -47,6 +49,8 @@ export default function EventsPanel() {
     }
   };
 
+  const router = useRouter();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -63,6 +67,7 @@ export default function EventsPanel() {
       if (!res.ok) throw new Error('Failed to save event');
 
       fetchEvents();
+      try { router.refresh(); } catch {}
       setShowForm(false);
       setEditingId(null);
       setFormData({
@@ -103,6 +108,7 @@ export default function EventsPanel() {
       const res = await fetch(`/api/events/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete event');
       fetchEvents();
+      try { router.refresh(); } catch {}
     } catch (error) {
       console.error('Error deleting event:', error);
       alert('Failed to delete event');
@@ -194,12 +200,11 @@ export default function EventsPanel() {
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                 className="bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600"
               />
-              <input
-                type="text"
-                placeholder="Banner URL"
+              <ImageUploader
+                label="Banner Image"
                 value={formData.bannerUrl}
-                onChange={(e) => setFormData({ ...formData, bannerUrl: e.target.value })}
-                className="bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600"
+                onChange={(url) => setFormData({ ...formData, bannerUrl: url })}
+                helpText="Upload or select a banner for this event"
               />
             </div>
 

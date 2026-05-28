@@ -5,8 +5,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { getServerAuthSession } from '@/lib/auth';
+import { requireAdminOrOwner, debugLog } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
 import { isAdmin } from '@/lib/admin-utils';
 import { UserRole } from '@prisma/client';
@@ -48,66 +48,31 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerAuthSession();
+    const authResp = requireAdminOrOwner(session as any);
+    if (authResp) return authResp;
 
-    if (!session?.user?.email) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const user = await prisma.user.findUnique({ where: { email: session?.user?.email } });
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user || !isAdmin(user.role as UserRole)) {
-      return NextResponse.json(
-        { success: false, error: 'Forbidden: Admin access required' },
-        { status: 403 }
-      );
-    }
-
+    debugLog('POST /api/tournaments body', (session as any)?.user?.role);
     const body = await request.json();
-    const {
-      title,
-      description,
-      gameId,
-      status,
-      startDate,
-      endDate,
-      bannerUrl,
-      prizePool,
-      maxTeams,
-      registrationDeadline,
-      registrationLink,
-      schedule,
-      rules,
-    } = body;
+    const { title, description, status, startDate, bannerUrl, prizePool, maxTeams, rules } = body;
 
     if (!title || !startDate) {
-      return NextResponse.json(
-        { success: false, error: 'Missing required fields' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'Missing required fields (title, startDate)' }, { status: 400 });
     }
 
     const tournament = await prisma.tournament.create({
       data: {
         title,
         description,
-        gameId,
         status: status || 'UPCOMING',
         startDate: new Date(startDate),
-        endDate: endDate ? new Date(endDate) : undefined,
         bannerUrl,
         prizePool,
-        maxTeams,
-        registrationDeadline: registrationDeadline ? new Date(registrationDeadline) : undefined,
-        registrationLink,
-        schedule,
+        maxTeams: maxTeams ? Number(maxTeams) : undefined,
         rules,
-        createdBy: user.id,
+        createdBy: user?.id,
       },
       include: {
         creator: {

@@ -6,8 +6,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { getServerAuthSession } from '@/lib/auth';
+import { requireAdminOrOwner, debugLog } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
 import { isAdmin } from '@/lib/admin-utils';
 import { UserRole } from '@prisma/client';
@@ -52,58 +52,26 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerAuthSession();
+    const authResp = requireAdminOrOwner(session as any);
+    if (authResp) return authResp;
 
-    if (!session?.user?.email) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user || !isAdmin(user.role as UserRole)) {
-      return NextResponse.json(
-        { success: false, error: 'Forbidden: Admin access required' },
-        { status: 403 }
-      );
-    }
+    const user = await prisma.user.findUnique({ where: { email: session?.user?.email } });
+    debugLog('PUT /api/tournaments/:id by', (session as any)?.user?.role);
 
     const body = await request.json();
-    const {
-      title,
-      description,
-      gameId,
-      status,
-      startDate,
-      endDate,
-      bannerUrl,
-      prizePool,
-      maxTeams,
-      registrationDeadline,
-      registrationLink,
-      schedule,
-      rules,
-    } = body;
+    const { title, description, status, startDate, bannerUrl, prizePool, maxTeams, rules } = body;
 
     const tournament = await prisma.tournament.update({
       where: { id: params.id },
       data: {
         title: title || undefined,
         description: description || undefined,
-        gameId: gameId || undefined,
         status: status || undefined,
         startDate: startDate ? new Date(startDate) : undefined,
-        endDate: endDate ? new Date(endDate) : undefined,
         bannerUrl: bannerUrl || undefined,
         prizePool: prizePool || undefined,
-        maxTeams: maxTeams || undefined,
-        registrationDeadline: registrationDeadline ? new Date(registrationDeadline) : undefined,
-        registrationLink: registrationLink || undefined,
-        schedule: schedule || undefined,
+        maxTeams: maxTeams ? Number(maxTeams) : undefined,
         rules: rules || undefined,
       },
       include: {
@@ -131,25 +99,11 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerAuthSession();
+    const authResp = requireAdminOrOwner(session as any);
+    if (authResp) return authResp;
 
-    if (!session?.user?.email) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user || !isAdmin(user.role as UserRole)) {
-      return NextResponse.json(
-        { success: false, error: 'Forbidden: Admin access required' },
-        { status: 403 }
-      );
-    }
+    const user = await prisma.user.findUnique({ where: { email: session?.user?.email } });
 
     // Fetch tournament before deletion for audit log
     const tournament = await prisma.tournament.findUnique({

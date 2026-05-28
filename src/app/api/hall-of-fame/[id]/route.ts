@@ -6,11 +6,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { getServerAuthSession } from '@/lib/auth';
+import { requireAdminOrOwner, debugLog } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
-import { isAdmin } from '@/lib/admin-utils';
-import { UserRole } from '@prisma/client';
 
 export async function GET(
   request: NextRequest,
@@ -64,25 +62,12 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerAuthSession();
+    const authResp = requireAdminOrOwner(session as any);
+    if (authResp) return authResp;
 
-    if (!session?.user?.email) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user || !isAdmin(user.role as UserRole)) {
-      return NextResponse.json(
-        { success: false, error: 'Forbidden: Admin access required' },
-        { status: 403 }
-      );
-    }
+    const user = await prisma.user.findUnique({ where: { email: session?.user?.email } });
+    debugLog('PUT /api/hall-of-fame/[id]', (session as any)?.user?.role, params.id);
 
     const body = await request.json();
     const { category, title, description, imageUrl } = body;
@@ -127,25 +112,12 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerAuthSession();
+    const authResp = requireAdminOrOwner(session as any);
+    if (authResp) return authResp;
 
-    if (!session?.user?.email) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user || !isAdmin(user.role as UserRole)) {
-      return NextResponse.json(
-        { success: false, error: 'Forbidden: Admin access required' },
-        { status: 403 }
-      );
-    }
+    const user = await prisma.user.findUnique({ where: { email: session?.user?.email } });
+    debugLog('DELETE /api/hall-of-fame/[id]', (session as any)?.user?.role, params.id);
 
     await prisma.hallOfFameAchievement.delete({
       where: { id: params.id },

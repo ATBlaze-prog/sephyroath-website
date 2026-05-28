@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerAuthSession } from '@/lib/auth';
+import { requireAdminOrOwner, debugLog } from '@/lib/permissions';
 
 export async function GET() {
   try {
@@ -23,9 +24,9 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const session = await getServerAuthSession();
-  if (!session?.user?.role || !['ADMIN', 'OWNER'].includes(session.user.role)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const authResp = requireAdminOrOwner(session as any);
+  if (authResp) return authResp;
+  debugLog('POST /api/games', (session as any)?.user?.role);
 
   try {
     const body = await request.json();
@@ -56,9 +57,9 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   const session = await getServerAuthSession();
-  if (!session?.user?.role || !['ADMIN', 'OWNER'].includes(session.user.role)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const authResp = requireAdminOrOwner(session as any);
+  if (authResp) return authResp;
+  debugLog('PATCH /api/games', (session as any)?.user?.role);
 
   try {
     const body = await request.json();
@@ -81,9 +82,9 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   const session = await getServerAuthSession();
-  if (!session?.user?.role || !['ADMIN', 'OWNER'].includes(session.user.role)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const authResp = requireAdminOrOwner(session as any);
+  if (authResp) return authResp;
+  debugLog('DELETE /api/games', (session as any)?.user?.role);
 
   try {
     const body = await request.json();

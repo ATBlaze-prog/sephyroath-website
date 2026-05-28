@@ -5,6 +5,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import ImageUploader from '@/components/admin/ImageUploader';
 import { HallOfFameAchievement, MemberProfile } from '@prisma/client';
 import { Trash2, Edit2, Plus } from 'lucide-react';
 
@@ -88,6 +90,7 @@ export default function HallOfFamePanel() {
       if (!res.ok) throw new Error('Failed to save achievement');
 
       fetchAchievements();
+      try { router.refresh(); } catch {}
       setShowForm(false);
       setEditingId(null);
       setFormData({
@@ -122,6 +125,7 @@ export default function HallOfFamePanel() {
       const res = await fetch(`/api/hall-of-fame/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete achievement');
       fetchAchievements();
+      try { router.refresh(); } catch {}
     } catch (error) {
       console.error('Error deleting achievement:', error);
       alert('Failed to delete achievement');
@@ -203,12 +207,11 @@ export default function HallOfFamePanel() {
               className="w-full bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600"
             />
 
-            <input
-              type="text"
-              placeholder="Image URL"
+            <ImageUploader
+              label="Achievement Image"
               value={formData.imageUrl}
-              onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-              className="w-full bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600"
+              onChange={(url) => setFormData({ ...formData, imageUrl: url })}
+              helpText="Upload or select an image for this achievement"
             />
 
             <div className="flex gap-4">

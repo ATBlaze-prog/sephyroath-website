@@ -4,9 +4,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
-import { requireAdminAccess } from '@/lib/rbac';
+import { getServerAuthSession } from '@/lib/auth';
+import { requireAdminOrOwner, debugLog } from '@/lib/permissions';
 import { UserRole } from '@prisma/client';
 import { uploadImageToCloudinary } from '@/lib/cloudinary';
 
@@ -27,15 +26,12 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
+    const session = await getServerAuthSession();
+    const authResp = requireAdminOrOwner(session as any);
+    if (authResp) return authResp;
 
-    const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-    if (!user || !requireAdminAccess(user.role as UserRole)) {
-      return NextResponse.json({ success: false, error: 'Forbidden: Admin access required' }, { status: 403 });
-    }
+    const user = await prisma.user.findUnique({ where: { email: session?.user?.email } });
+    debugLog('POST /api/media upload by', (session as any)?.user?.role);
 
     const formData = await request.formData();
     const file = formData.get('file');

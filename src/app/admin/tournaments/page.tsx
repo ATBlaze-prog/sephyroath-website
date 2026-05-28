@@ -5,6 +5,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import ImageUploader from '@/components/admin/ImageUploader';
 import { Tournament } from '@prisma/client';
 import { Trash2, Edit2, Plus } from 'lucide-react';
 
@@ -23,13 +24,12 @@ export default function TournamentsPanel() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    gameId: '',
     status: 'UPCOMING',
     startDate: '',
-    endDate: '',
     bannerUrl: '',
     prizePool: '',
     maxTeams: '',
+    rules: '',
   });
 
   useEffect(() => {
@@ -69,13 +69,12 @@ export default function TournamentsPanel() {
       setFormData({
         title: '',
         description: '',
-        gameId: '',
         status: 'UPCOMING',
         startDate: '',
-        endDate: '',
         bannerUrl: '',
         prizePool: '',
         maxTeams: '',
+        rules: '',
       });
     } catch (error) {
       console.error('Error saving tournament:', error);
@@ -87,13 +86,12 @@ export default function TournamentsPanel() {
     setFormData({
       title: tournament.title,
       description: tournament.description || '',
-      gameId: tournament.gameId || '',
       status: tournament.status,
       startDate: new Date(tournament.startDate).toISOString().slice(0, 16),
-      endDate: tournament.endDate ? new Date(tournament.endDate).toISOString().slice(0, 16) : '',
       bannerUrl: tournament.bannerUrl || '',
       prizePool: tournament.prizePool || '',
       maxTeams: tournament.maxTeams?.toString() || '',
+      rules: tournament.rules || '',
     });
     setEditingId(tournament.id);
     setShowForm(true);
@@ -123,13 +121,12 @@ export default function TournamentsPanel() {
             setFormData({
               title: '',
               description: '',
-              gameId: '',
               status: 'UPCOMING',
               startDate: '',
-              endDate: '',
               bannerUrl: '',
               prizePool: '',
               maxTeams: '',
+              rules: '',
             });
           }}
           className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-colors"
@@ -169,12 +166,6 @@ export default function TournamentsPanel() {
                 className="bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600"
                 required
               />
-              <input
-                type="datetime-local"
-                value={formData.endDate}
-                onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                className="bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600"
-              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -194,11 +185,17 @@ export default function TournamentsPanel() {
               />
             </div>
 
-            <input
-              type="text"
-              placeholder="Banner URL"
+            <ImageUploader
+              label="Banner Image"
               value={formData.bannerUrl}
-              onChange={(e) => setFormData({ ...formData, bannerUrl: e.target.value })}
+              onChange={(url) => setFormData({ ...formData, bannerUrl: url })}
+              helpText="Upload or select a banner image for the tournament."
+            />
+
+            <textarea
+              placeholder="Rules (optional)"
+              value={formData.rules}
+              onChange={(e) => setFormData({ ...formData, rules: e.target.value })}
               className="w-full bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600"
             />
 
